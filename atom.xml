@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://905358924.github.io</id>
     <title>PERSONAL  BLOG</title>
-    <updated>2022-02-14T04:50:36.051Z</updated>
+    <updated>2022-02-14T04:59:44.463Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://905358924.github.io"/>
     <link rel="self" href="https://905358924.github.io/atom.xml"/>
@@ -36,7 +36,7 @@ console.log(&quot;防抖&quot;);<br>
 console.log(new Date());<br>
 },300);<br>
 };</p>
-<p>为什么要clearTimeout<br>
+<p>为什么要clearTimeout？<br>
 每次onscroll的时候，先清除掉计时器.如果不清楚，会导致多次触发的时候，其实是把好多次的处理方法放在某个时间点后一起执行。<br>
 比如下面：</p>
 <p>for (var i = 0; i &lt; 10; i++) {<br>
