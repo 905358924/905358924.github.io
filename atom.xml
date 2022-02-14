@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://905358924.github.io</id>
     <title>PERSONAL  BLOG</title>
-    <updated>2022-02-13T06:27:33.782Z</updated>
+    <updated>2022-02-14T04:50:10.881Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://905358924.github.io"/>
     <link rel="self" href="https://905358924.github.io/atom.xml"/>
@@ -11,6 +11,94 @@
     <logo>https://905358924.github.io/images/avatar.png</logo>
     <icon>https://905358924.github.io/favicon.ico</icon>
     <rights>All rights reserved 2022, PERSONAL  BLOG</rights>
+    <entry>
+        <title type="html"><![CDATA[防抖与节流]]></title>
+        <id>https://905358924.github.io/post/fang-dou-yu-jie-liu/</id>
+        <link href="https://905358924.github.io/post/fang-dou-yu-jie-liu/">
+        </link>
+        <updated>2022-02-14T04:07:30.000Z</updated>
+        <content type="html"><![CDATA[<p>一、需求<br>
+解决 onscroll每次计算导致的性能问题<br>
+onscroll是最典型的需要进行防抖或者节流的处理问题<br>
+二、原理<br>
+无论是防抖还是节流最终的目的都是避免回调函数中的处理每次都执行。<br>
+1、防抖<br>
+防抖的思想如下：<br>
+借助事件循环队列和setTimeout来实现只有空闲的时候才去处理回调函数<br>
+使用setTimeout主要是为了使得处理方法挂在事件循环队列后面，保证事件循环队列中的前面的一些操作有时间进行</p>
+<p>// 计时器<br>
+var timer = false;<br>
+//<br>
+window.onscroll = function(){<br>
+clearTimeout(timer);<br>
+timer = setTimeout(function(){<br>
+console.log(&quot;防抖&quot;);<br>
+console.log(new Date());<br>
+},300);<br>
+};</p>
+<p>为什么要clearTimeout<br>
+每次onscroll的时候，先清除掉计时器.如果不清楚，会导致多次触发的时候，其实是把好多次的处理方法放在某个时间点后一起执行。<br>
+比如下面：</p>
+<p>for (var i = 0; i &lt; 10; i++) {<br>
+(function (i) {<br>
+setTimeout(function () {<br>
+console.log(i);<br>
+}, 3000);<br>
+})(i);<br>
+}<br>
+上面代码在3秒后会一起输出 1,2,3,4,5,6,7,8,9<br>
+而下面的代码，只会输出9<br>
+var timer2 = false;<br>
+for (var i = 0; i &lt; 10; i++) {<br>
+clearTimeout(timer2);<br>
+(function (i) {<br>
+timer2 = setTimeout(function () {<br>
+console.log(i);<br>
+}, 3000);<br>
+})(i);<br>
+}<br>
+这是因为，每次我将上次的timer给清除掉了，也就是我如果后面同样有处理函数的话，那我就用后面的定时器。<br>
+前面定时器没啥用了，所以直接clearTimeout保证了这种实现。<br>
+在解决onscroll问题的时候，如果自己观察console可以发现，防抖保证了滚动停止的时候，才会进行处理，因为滚动停止了，没有scroll事件了，最后一次timer会被保留，从而进行调用</p>
+<p>2、节流<br>
+节流思想如下：<br>
+借助flag元素和setTimeout实现在一定时间内，只执行一次方法<br>
+防抖中，每次其实都会生成定时器，只不过定时器还没到时间（这个时间是指将事件挂在事件循环队列后面的时间），就把上面的定时器给清掉了。而节流则是到了一定的时间，我才进行定时器，否则我不进行定时器。<br>
+比如：</p>
+<p>var flag = true;</p>
+<p>window.onscroll = function(){<br>
+if(!flag) return false;<br>
+flag = false;<br>
+setTimeout(function(){<br>
+console.log(&quot;节流&quot; + new Date());<br>
+flag = true;<br>
+},300);<br>
+};<br>
+这个还是比较直观的:</p>
+<pre><code>    首先有一个标志位flag,默认是true，这个标志位控制是否能够进行定时器.
+</code></pre>
+<p>如果 flag 是 false，则之间返回，表示时间还没到，不能进行下一次定时器<br>
+如果 flag 是 true，说明能够进行一次处理，首先会将 flag 标志位置为 false，表示已经执行过一次<br>
+在定时器中，处理方法操作外，最后一条语句flag = true 表示，本段时间已经结束了，可以进行下一次的定时器。<br>
+产生的效果如下：<br>
+第一次执行定时器后，300毫秒后，将事件挂在事件循环队列后，而在这个过程中，（包括300ms及事件循环队列循环到挂上事件的时间段）flag 都是 false，则不会多次设置定时器，一旦事件执行了，则 flag 变成 true，能够设置下一次定时器<br>
+下面的代码虽然无法做到节流（不是无法做到节流，for太快了，和onscroll是不一样的），但是可以明显的看到一个等待期，并且最后只能输出一个0，因为第一次执行之后，由于for太快，在等待（等待概念查看上面的解释）的时间中，for已经结束了。</p>
+<pre><code> var flag = true;
+ for (var i = 0; i &lt; 1000; i++) {
+    if (!flag) {
+        console.log(&quot;等待期&quot;);
+        continue;
+    }
+    flag = false;
+    (function (i) {
+        setTimeout(function () {
+            console.log(i);
+            flag = true;
+        }, 0);
+    })(i);
+ }    </code></pre>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[早晨报告]]></title>
         <id>https://905358924.github.io/post/zao-chen-bao-gao/</id>
